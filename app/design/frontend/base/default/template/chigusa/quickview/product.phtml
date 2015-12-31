@@ -1,0 +1,143 @@
+<?php
+$_product = Mage::getModel('catalog/product')->load($this->getProduct()->getId());
+$productId = $_product->getId();
+$_helper = $this->helper('catalog/output');
+?>
+
+<?php
+$isTab = Mage::getStoreConfig('chigusa_quickview/general/enabledTab');
+$isTagTab = Mage::getStoreConfig('chigusa_quickview/general/enabledTagTab');
+$isReviewTab = Mage::getStoreConfig('chigusa_quickview/general/enabledReviewTab');
+$isMoreview = Mage::getStoreConfig('chigusa_quickview/moreview/enable');
+$isAutoplay = Mage::getStoreConfig('chigusa_quickview/moreview/autoplay');
+$orientation = Mage::getStoreConfig('chigusa_quickview/moreview/orientation');
+$galleryImages = $this->getGalleryImages();
+$_coreHelper = $this->helper('core');
+
+?>
+
+<div class="product-essential">
+<div class="area">
+	
+	<div class="box-wrap">
+		<!-- ========== box-one ========== -->
+		<div id="box-one">
+			<div class="product-img-box">
+				<a href="<?php echo $_product->getProductUrl(); ?>">
+					<!--img src="<?php echo Mage::helper('catalog/image')->init($_product, 'image')->resize(230, 230); ?>"/-->
+				</a>
+			</div>
+			
+			<!-- ==================== image slider=================== -->
+	<div class="product-slider-wrapper">
+	<div id="houseBase" style="width: 280px;">
+		<?php
+			if (count($galleryImages) > 0) {
+				$_image = $galleryImages->getFirstItem();
+		?>
+		<a href="<?php echo $this->helper('catalog/image')->init($this->getProduct(), 'image', $_image->getFile());?>" class="cloud-zoom" rel="transparentImage: 'data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', useWrapper: false, showTitle: false, zoomWidth:'280', adjustY:0, adjustX:0">
+			<img src="<?php echo $this->helper('catalog/image')->init($this->getProduct(), 'thumbnail', $_image->getFile())->keepFrame(false)->resize(280);?>">
+		</a>
+		<?php } ?>
+	</div>
+<?php if ($isMoreview) {?>
+	<?php
+		if (count($galleryImages) > 0) {
+	?>
+		<ul class="bxslider">
+		<?php
+			foreach ($galleryImages as $_image) {
+		?>
+			<li><img src="<?php echo $this->helper('catalog/image')->init($this->getProduct(), 'thumbnail', $_image->getFile())->keepFrame(false)->resize(50);?>" data-href="<?php echo $this->helper('catalog/image')->init($this->getProduct(), 'image', $_image->getFile());?>" data-thumb-image="<?php echo $this->helper('catalog/image')->init($this->getProduct(), 'thumbnail', $_image->getFile())->keepFrame(false)->resize(285);?>"></li>
+		<?php
+			}
+		}
+	?>
+		</ul>
+<?php } ?>
+	</div>
+			<!-- ==================== End of image slider=================== -->
+
+			<div class="product-shop">
+				<p>
+					<span class="cz-product-name"><?php echo $_product->getName(); ?></span>
+					- <label>SKU: </label><span class="cz-product-sku"><?php echo $_product->getSKU(); ?></span>
+				</p>
+				
+				<p><label>Category: </label><?php echo Mage::getModel('catalog/category')->load($_product->getCategoryId())->getName(); ?></p>
+				
+				<div><label>Short Description: </label></div>
+				<div class='cz-short-description'><?php echo $_product->getShortDescription(); ?></div>
+				<p></p>
+				
+				<div><label>Description: </label><span class="flat-button" id="expand_desc"></span></div>
+				<div class="cz-product-desc"><?php echo $_product->getDescription();?></div>
+				<p></p>
+
+				<div class="col2-set">
+					<div class="col-1">
+						<span class="regular-price">
+							<span class="price"><?php echo $_coreHelper->formatPrice($_product->getPrice(), false);?></span>
+						</span>
+					</div>
+					<div class="col-1">
+						<?php if ($_product->isSaleable()): ?>
+							<button class="button" onclick="setLocation('<?php echo Mage::helper('checkout/cart')->getAddUrl($_product); ?>')"><span><span><?php echo $this->__('Add to Cart') ?></span></span></button>
+						<?php endif; ?>
+					</div>
+				</div>
+
+				<div class='divider'></div>
+
+				<ul class="add-to-links">
+					<?php if ($this->helper('wishlist')->isAllow()) : ?>
+						<li><a href="<?php echo $this->helper('wishlist')->getAddUrl($_product) ?>" class="link-wishlist"><?php echo $this->__('Add to Wishlist') ?></a></li>
+					<?php endif; ?>
+					<?php if($_compareUrl=$this->getAddToCompareUrl($_product)): ?>
+						<li><span class="separator">|</span> <a href="<?php echo $_compareUrl ?>" class="link-compare"><?php echo $this->__('Add to Compare') ?></a></li>
+					<?php endif; ?>
+				</ul>
+			</div>
+		</div>
+		<!-- ========== End of box-one ========== -->
+	</div>
+</div>
+    <div class="clear"></div>
+</div>
+<script>
+jQuery(document).ready(function() {
+	jQuery('.cloud-zoom, .cloud-zoom-gallery').CloudZoom({
+		adjustX: 20,
+		adjustY: 20
+	});
+	
+	// Horizontal
+	var horiSlider = jQuery('.bxslider').bxSlider({
+		mode: '<?php echo $orientation?>',
+		auto: <?php echo $isAutoplay ? 'true' : 'false'?>,
+		autoControls: false, 
+		slideMargin: 5,
+
+		// CAROUSEL
+		minSlides: 5,
+		maxSlides: 5,
+		moveSlides: 1,
+		slideWidth: 50,
+		
+		// PAGER
+		pager: false,
+		
+		onSlideAfter: function() {
+			var currentImg = horiSlider.getCurrentSlideElement().children('img');
+			jQuery('#houseBase a').attr('href', currentImg.attr('data-href'));
+			jQuery('#houseBase img').attr('src', currentImg.attr('data-thumb-image'));
+			jQuery('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+		}
+	});
+	
+	// Vertical moreview
+	<?php if ($orientation == 'vertical') {?>
+		jQuery('#houseBase').css('float', 'left');
+	<?php } ?>
+});
+</script>
