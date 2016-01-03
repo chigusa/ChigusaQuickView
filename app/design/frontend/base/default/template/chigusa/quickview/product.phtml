@@ -18,6 +18,18 @@ $_coreHelper = $this->helper('core');
 
 <div class="product-essential">
 <div class="area">
+<?php if ($isTab) {?>
+	<ul class="tab-bar tab-group">
+	    <li><a class="box-one active-tab-name">Description</a></li>
+	    <?php if ($isTagTab) {?>
+		<li><a class="box-two">Product Tags</a></li>
+	    <?php } ?>
+		
+	    <?php if ($isReviewTab) {?>
+	    <li><a class="box-three">Product Reviews</a></li>
+	    <?php } ?>
+	</ul>
+<?php } ?>
 	
 	<div class="box-wrap">
 		<!-- ========== box-one ========== -->
@@ -100,6 +112,173 @@ $_coreHelper = $this->helper('core');
 			</div>
 		</div>
 		<!-- ========== End of box-one ========== -->
+		
+		<!-- ========== box-two ========== -->
+	<?php if ($isTagTab) {?>
+		<div id="box-two" class="hidden">
+			<div class="list-area">
+			<!-- // Product tag list -->
+			<label><?php echo $this->__('List of product tags: ') ?></label>
+			<?php $_tags = new Mage_Tag_Block_Product_List();?>
+			<?php foreach($_tags->getTags() as $tag):?>
+				<span class="tag-item"><a href="<?php echo $tag->getTaggedProductsUrl()?>"><?php echo $tag->getName()?></a></span> 
+			<?php endforeach;?>
+			<p></p>
+			
+			<form id="addTagForm" action="<?php echo $this->getFormAction(); ?>" method="get">
+				<div class="form-add">
+					<div><label for="productTagName"><?php echo $this->__('Add Your Tags:') ?></label></div>
+					<input type="text" class="input-text required-entry" name="productTagName" id="productTagName" />
+					<button type="button" title="<?php echo Mage::helper('core')->quoteEscape($this->__('Add Tags')) ?>" id="submitTagForm" class="button">
+						<span>
+							<span><?php echo $this->__('Add Tags') ?></span>
+						</span>
+					</button>
+				</div>
+			</form>
+			<p class="note"><?php echo $this->__("Use spaces to separate tags. Use single quotes (') for phrases.") ?></p>
+			</div>
+		</div>
+	<?php } ?>
+
+		<!-- ========== End of box-two ========== -->
+		
+		<!-- ========== box-three ========== -->
+	<?php if ($isReviewTab) {?>
+		<div id="box-three" class="hidden">
+			<div class="review-list-area">
+			<?php
+			$reviewsCount = Mage::getModel('review/review')->getTotalReviews($_product->getId(), true, Mage::app()->getStore()->getId());
+			?>
+			<p>Reviews: <?php echo $reviewsCount; ?></p>
+			<?php
+			$reviews = Mage::getModel('review/review')->getCollection()
+				->addStoreFilter(Mage::app()->getStore()->getId())
+				->addEntityFilter('product', $productId)
+				->addStatusFilter(Mage_Review_Model_Review::STATUS_APPROVED)
+				->setDateOrder()
+				->addRateVotes()
+				;
+			if(count($reviews->getItems())) {
+				$count = 0;
+				foreach($reviews->getItems() as $_review) {
+					$rUrl = Mage::getUrl('review/product/view', array('id' => $_review->getId()));
+					$count++;
+			?>
+            <dt>
+                <span class="count-view"><?=$count?></span>. <a href="<?php echo $rUrl; ?>"><?php echo $this->escapeHtml($_review->getTitle()) ?></a> <?php echo $this->__('Review by <span>%s</span>', $this->escapeHtml($_review->getNickname())) ?>
+            </dt>
+            <dd>
+                <?php $_votes = $_review->getRatingVotes(); ?>
+                <?php if (count($_votes)){ ?>
+                <table class="ratings-table">
+                    <col width="1" />
+                    <col />
+                    <tbody>
+                        <?php foreach ($_votes as $_vote): ?>
+                        <tr>
+                            <th><?php echo $this->escapeHtml($_vote->getRatingCode()) ?></th>
+                            <td>
+                                <div class="rating-box">
+                                    <div class="rating" style="width:<?php echo $_vote->getPercent() ?>%;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php } ?>
+                <?php echo nl2br($this->escapeHtml($_review->getDetail())) ?>
+                <small class="date"><?php echo $this->__('(Posted on %s)', $this->formatDate($_review->getCreatedAt()), 'long') ?></small>
+            </dd>
+			<p></p>
+			<?php
+				}
+			}
+			?>
+		</div>
+			
+		<div class='divider'></div>
+<div class="form-add">
+    <h2><?php echo $this->__('Write Your Own Review') ?></h2>
+    <?php if ($this->getAllowReview()): ?>
+    <form action="<?php echo $this->getCzAction() ?>" method="post" id="review-form">
+		<input name="form_key" type="hidden" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" />
+        <?php echo $this->getBlockHtml('formkey'); ?>
+        <fieldset>
+            <?php echo $this->getChildHtml('form_fields_before')?>
+            <?php if( $this->getRatings() && $this->getRatings()->getSize()): ?>
+                <h4><?php echo $this->__('How do you rate this product?') ?> <em class="required">*</em></h4>
+                <span id="input-message-box"></span>
+                <table class="data-table" id="product-review-table">
+                    <col />
+                    <col width="1" />
+                    <col width="1" />
+                    <col width="1" />
+                    <col width="1" />
+                    <col width="1" />
+                    <thead>
+                        <tr>
+                            <th>&nbsp;</th>
+                            <th><span class="nobr"><?php echo $this->__('1 star') ?></span></th>
+                            <th><span class="nobr"><?php echo $this->__('2 stars') ?></span></th>
+                            <th><span class="nobr"><?php echo $this->__('3 stars') ?></span></th>
+                            <th><span class="nobr"><?php echo $this->__('4 stars') ?></span></th>
+                            <th><span class="nobr"><?php echo $this->__('5 stars') ?></span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($this->getRatings() as $_rating): ?>
+                        <tr>
+                            <th><?php echo $this->escapeHtml($_rating->getRatingCode()) ?></th>
+                        <?php foreach ($_rating->getOptions() as $_option): ?>
+                            <td class="value"><input type="radio" name="ratings[<?php echo $_rating->getId() ?>]" id="<?php echo $this->escapeHtml($_rating->getRatingCode()) ?>_<?php echo $_option->getValue() ?>" value="<?php echo $_option->getId() ?>" class="radio" /></td>
+                        <?php endforeach; ?>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <input type="hidden" name="validate_rating" class="validate-rating" value="" />
+                <script type="text/javascript">decorateTable('product-review-table')</script>
+            <?php endif; ?>
+                <ul class="form-list">
+                    <li>
+                        <label for="nickname_field" class="required"><em>*</em><?php echo $this->__('Nickname') ?></label>
+                        <div class="input-box">
+                            <input type="text" name="nickname" id="nickname_field" class="input-text required-entry" value="<?php //echo $this->escapeHtml($data->getNickname()) ?>" />
+                        </div>
+                    </li>
+                    <li>
+                        <label for="summary_field" class="required"><em>*</em><?php echo $this->__('Summary of Your Review') ?></label>
+                        <div class="input-box">
+                            <input type="text" name="title" id="summary_field" class="input-text required-entry" value="<?php //echo $this->escapeHtml($data->getTitle()) ?>" />
+                        </div>
+                    </li>
+                    <li>
+                        <label for="review_field" class="required"><em>*</em><?php echo $this->__('Review') ?></label>
+                        <div class="input-box">
+                            <textarea name="detail" id="review_field" cols="5" rows="3" class="required-entry"><?php //echo $this->escapeHtml($data->getDetail()) ?></textarea>
+                        </div>
+                    </li>
+                </ul>
+            </fieldset>
+            <div class="buttons-set">
+                <button type="submit" title="<?php echo $this->__('Submit Review') ?>" id="submitReview" class="button"><span><span><?php echo $this->__('Submit Review') ?></span></span></button>
+            </div>
+    </form>
+    <?php else: ?>
+    <p class="review-nologged" id="review-form">
+        <?php echo $this->__('Only registered users can write reviews. Please, <a href="%s">log in</a> or <a href="%s">register</a>', $this->getLoginLink(), Mage::helper('customer')->getRegisterUrl()) ?>
+    </p>
+    <?php endif ?>
+</div>
+			
+		</div>
+	<?php } ?>
+		<!-- ========== End of box-three ========== -->
+		
+		<div id="box-four" class="hidden">four
+		</div><!-- box-four -->
 	</div>
 </div>
     <div class="clear"></div>
