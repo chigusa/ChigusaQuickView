@@ -15,9 +15,42 @@ $galleryImages = $this->getGalleryImages();
 $_coreHelper = $this->helper('core');
 
 ?>
+<?php
+$_productCollection = $this->getSlideProductCollection();
 
+$p = 0;
+$n = 0;
+$prevId = null;
+$nextId = null;
+foreach ($_productCollection as $prd) {
+	//Get prev id
+	if ($prd->getId() == $productId) {
+		$p = 1;
+	}
+	if ($p == 0) {
+		$prevId = $prd->getId();
+	}
+	//Get next id
+	if ($y == 1) {
+		$nextId = $prd->getId();
+		break;
+	}
+	if ($prd->getId() == $productId) {
+		$y = 1;
+	}
+}
+?>
+
+<div class="navi-product">
+	<?php if($prevId): ?>
+		<div class="prev-prd" dalink="<?php echo $this->getUrl('quickview/product/quickview/id/' . $prevId) ?>" title="Previous product"> < </div>
+	<?php endif; ?>
+	<?php if($nextId): ?>
+		<div class="next-prd" dalink="<?php echo $this->getUrl('quickview/product/quickview/id/' . $nextId) ?>" title="Next product"> > </div>
+	<?php endif; ?>
+</div>
 <div class="product-essential">
-<div class="area">
+<div class="tabbed-area">
 <?php if ($isTab) {?>
 	<ul class="tab-bar tab-group">
 	    <li><a class="box-one active-tab-name">Description</a></li>
@@ -47,7 +80,7 @@ $_coreHelper = $this->helper('core');
 			if (count($galleryImages) > 0) {
 				$_image = $galleryImages->getFirstItem();
 		?>
-		<a href="<?php echo $this->helper('catalog/image')->init($this->getProduct(), 'image', $_image->getFile());?>" class="cloud-zoom" rel="transparentImage: 'data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', useWrapper: false, showTitle: false, zoomWidth:'280', adjustY:0, adjustX:0">
+		<a href="<?php echo $this->helper('catalog/image')->init($this->getProduct(), 'image', $_image->getFile());?>" class="cloud-zoom" rel="transparentImage: 'data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', useWrapper: false, showTitle: false, zoomWidth:'280', adjustY:20, adjustX:20">
 			<img src="<?php echo $this->helper('catalog/image')->init($this->getProduct(), 'thumbnail', $_image->getFile())->keepFrame(false)->resize(280);?>">
 		</a>
 		<?php } ?>
